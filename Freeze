@@ -1,0 +1,91 @@
+package me.Jaidev2903.freeze;
+
+import java.util.ArrayList;
+
+import net.md_5.bungee.api.ChatColor;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class Freeze extends JavaPlugin implements Listener {
+	
+	
+	ArrayList<String> frozen = new ArrayList<String>();
+	
+	@EventHandler
+	public void onPlayerMove(PlayerMoveEvent e) {
+		Player p = e.getPlayer();
+		if(frozen.contains(p.getName())) {
+			e.setTo(e.getFrom());
+			p.sendMessage(colorize(getConfig().getString("OnFreeze")));
+		}
+	}
+	
+	
+	public void onEnable() {
+		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+	
+	    } 
+	public static String colorize(String message) {
+	        return ChatColor.translateAlternateColorCodes('&', message);
+	}
+	
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		if(cmd.getName().equalsIgnoreCase("freeze")){
+			if(!sender.hasPermission("freeze.freeze")) {
+				sender.sendMessage(ChatColor.RED + "You do not have permission to do that!");
+				return true;
+			}
+		
+			if(args.length==0) {
+				sender.sendMessage(ChatColor.RED + "Please specify the player to freeze/unfreeze");
+				return true;
+			}
+			Player target = Bukkit.getServer().getPlayer(args[0]);
+				if(target==null) {
+					sender.sendMessage(ChatColor.RED + "Could not find player " + ChatColor.BOLD + args[0] + "!");
+					return true;
+				}
+				if(frozen.contains(target.getName())) {
+					frozen.remove(target.getName());
+					sender.sendMessage(ChatColor.GREEN + target.getName() + " has been unfrozen!");
+					return true;
+				}
+				frozen.add(target.getName());
+				sender.sendMessage(ChatColor.BLUE + target.getName() + " frozen!");
+				Location loc = target.getLocation();
+				loc.setY(loc.getY() - 1);
+				target.getWorld().spawnEntity(loc, EntityType.FIREWORK);
+				
+		}
+		if(cmd.getName().equalsIgnoreCase("fmsg")) {
+			if(!sender.hasPermission("freeze.fmsg")) {
+				sender.sendMessage(ChatColor.RED + "You do not have permission to do that!");
+				return true;
+			}
+			if(args.length==0) {
+				sender.sendMessage(ChatColor.RED + "Please specify the new freeze message.");
+				return true;
+			}
+			StringBuilder str = new StringBuilder();
+			for(int i = 0; i < args.length; i++) {
+				str.append(args[i] + " ");
+			}
+			String fmsg = str.toString();
+			getConfig().set("OnFreeze", fmsg);
+			saveConfig();
+			sender.sendMessage(ChatColor.GREEN + "New FreezeMSG: " + ChatColor.RESET + fmsg);
+		}
+		return true;
+	}
+
+}
