@@ -1,4 +1,4 @@
 Flex-MC
 =======
 
-All flex-mc plugins.
+General Flex-MC network plugins.
